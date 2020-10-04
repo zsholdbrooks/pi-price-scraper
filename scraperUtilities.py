@@ -7,9 +7,9 @@ import pickle
 import os
 
 UNIXHEADERS = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36"}
-BUFFER_FILE = "currentPrices.buf"
+BUFFER_FILE = "/home/pi/Desktop/pi-price-scraper/currentPrices.buf"
 
-EMAIL_FILE = "../emailCreds.txt"
+EMAIL_FILE = "/home/pi/Desktop/emailCreds.txt"
 
 ############################ Email Functions ############################
 
@@ -111,10 +111,8 @@ def getHTMLRetailerPromo(promoList, retailer="", link=""):
 def serializeList(objList):
     with open(BUFFER_FILE, 'wb') as file:
         pickle.dump(objList, file)
-        """
-        for obj in objList:
-            pickle.dump(obj, file, pickle.HIGHEST_PROTOCOL)"""
 
+# open function is relative to working directory
 def deserializeList():
     with open(BUFFER_FILE, 'rb') as file:
         objList = pickle.load(file)

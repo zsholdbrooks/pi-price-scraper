@@ -9,11 +9,11 @@ VALID_COMMANDS = {"additem", "ingestfilelist", "edititem", "removeitem", "listal
 ########################################################################
 ########################### Utility Functions ##########################
 ########################################################################
-def buildAndSendEmail(ObjListLocal):
+def buildAndSendEmail():
     sender, sender_password, receiver = getEmailCreds()
     emailBody = ""
     errorBody = ""
-    for obj in ObjListLocal:
+    for obj in ObjList:
         newChangeStr = obj.getChangeString()
         if (newChangeStr == ""):
             continue
@@ -51,8 +51,8 @@ def printTopLevelCommands():
     print("  removeItem")
     print("  listAllItems")
     print("  listAllLinks")
-    print("  testemail")
-    print("Note: 'add' can be run without arguments to enter manual interface.")
+    print("  testEmail")
+    print("Note: 'addItem' can be run without arguments to enter manual interface.")
 
 def processCommand(cmdStr, cmdFirstArg = ""):
     if (cmdFirstArg == ""):
@@ -221,11 +221,8 @@ def forceValuesToDefault():
 # run "python3 -c 'import scraper; scraper.processList()'"
 def processList():
     # Deserialize the buffer file because it is detached from interface
-    if (isfile(BUFFER_FILE)):
-        print("Loading existing list")
-        ObjList = deserializeList() # Run in isolation as command, it treats ObjList as local var
-    else:
-        print("Failed to process the objects because there is no buffer file")
+    if (ObjList == []):
+        print("Failed to process the objects because the list is empty")
         return
 
     # Run processing and fetching
@@ -233,9 +230,8 @@ def processList():
         obj.updatePrices()
 
     # Grab all of the changed and send email if there has been a change
-    buildAndSendEmail(ObjList)
+    buildAndSendEmail()
     # Serialize the ObjList back to buffer file
-    serializeList(ObjList)
 
 def progInterface():
     cmdStr = cmdFirstArg = ""
@@ -258,6 +254,8 @@ if __name__ == "__main__":
 
     if (len(argv) == 1):
         progInterface()
+    elif (argv[1] == "updatePrices"):
+        processList()
     else:
         processCommand(argv)
 
