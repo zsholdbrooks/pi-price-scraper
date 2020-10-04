@@ -40,7 +40,8 @@ class ProductObj:
             for i in range(len(VALID_RETAILERS)):
                 retailer = VALID_RETAILERS[i]
                 if (retailer in self.urlDict):
-                    print("  " + retailer.capitalize() + " - " + self.urlDict[retailer][LINK_IND])
+                    retailerAndPrice = "  " + retailer.capitalize() + " @ $" + str(self.urlDict[retailer][PREV_PRICE_IND])
+                    print(retailerAndPrice + " - " + self.urlDict[retailer][LINK_IND])
 
     def updatePrices(self):
         for retailer in VALID_RETAILERS:
@@ -64,10 +65,10 @@ class ProductObj:
             # Compare new price to old price
             prevPrice = self.urlDict[retailer][PREV_PRICE_IND]
             percentDiff = (prevPrice - newPrice) / prevPrice
-            #print("Diff for " self.productName + " at " + retailer + " is " + percentDiff)
+            #print("Diff for " + self.productName + " at " + retailer + " is " + str(percentDiff))
             if (percentDiff > self.significantPercentChange):
-                self.urlDict[CHANGED_PRICE_IND] = newPrice
-
+                self.urlDict[retailer][CHANGED_PRICE_IND] = newPrice
+            #print(str(self.urlDict[retailer][CHANGED_PRICE_IND]))
         return
 
     def getChangeString(self):
@@ -78,9 +79,12 @@ class ProductObj:
                 continue
             
             if (retailerEntryList[CHANGED_PRICE_IND] != -1):
-                tempStr = "\t{}:\tThe price decreased from ${:.2f} to ${:.2f} at {}\n"
-                tempStr.format(retailer.capitalize(), retailerEntryList[PREV_PRICE_IND],\
-                    retailerEntryList[CHANGED_PRICE_IND], retailerEntryList[LINK_IND])
+                #tempStr = "\t{}:\tThe price decreased from ${:.2f} to ${:.2f} at {}\n"
+                prevPrice = retailerEntryList[PREV_PRICE_IND]
+                newPrice = retailerEntryList[CHANGED_PRICE_IND]
+                link = retailerEntryList[LINK_IND]
+                tempStr = "\t{}:\tThe price decreased from $".format(retailer.capitalize())
+                tempStr += "{:.2f} to ${:.2f} at {}\n".format(prevPrice, newPrice, link)
                 changeString += tempStr
                 
                 promoList = retailerEntryList[PROMO_LIST_IND]
@@ -128,7 +132,7 @@ class ProductObj:
             print("This link was not added.")
             print(e)
             return
-        retailerEntryList = {retailer : [url, price, False, promoList]}
+        retailerEntryList = {retailer : [url, price, -1, promoList]}
         self.urlDict.update(retailerEntryList)
 
     def removeRetailer(self, retailer):
@@ -142,3 +146,12 @@ class ProductObj:
 
         self.urlDict.pop(retailer)
         print("Successfully removed " + retailer + " from " + self.productName)
+
+    # Intended for use of testing, not normal use
+    def resetValueToDefault(self):
+        for retailer in VALID_RETAILERS:
+            retailerEntryList = self.urlDict.get(retailer)
+            if (retailerEntryList == None):
+                continue
+            self.urlDict[retailer][PREV_PRICE_IND] = 100000.0
+            self.urlDict[retailer][PROMO_LIST_IND] = []

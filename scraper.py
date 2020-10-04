@@ -4,16 +4,16 @@ from sys import argv
 from os.path import isfile
 
 ObjList = []
-VALID_COMMANDS = {"additem", "ingestfilelist", "edititem", "removeitem", "listallitems", "listalllinks", "testemail"}
+VALID_COMMANDS = {"additem", "ingestfilelist", "edititem", "removeitem", "listallitems", "listalllinks", "testemail", "resetvalues"}
 
 ########################################################################
 ########################### Utility Functions ##########################
 ########################################################################
-def buildAndSendEmail():
+def buildAndSendEmail(ObjListLocal):
     sender, sender_password, receiver = getEmailCreds()
     emailBody = ""
     errorBody = ""
-    for obj in ObjList:
+    for obj in ObjListLocal:
         newChangeStr = obj.getChangeString()
         if (newChangeStr == ""):
             continue
@@ -26,6 +26,7 @@ def buildAndSendEmail():
     if (errorBody != ""):
         emailBody += "\nErrors:\n" + errorBody
     if (emailBody == ""):
+        print("No email sent!")
         return
     sendEmail(sender, sender_password, receiver, emailBody)
     #######
@@ -36,11 +37,11 @@ def extractQuote(strCmd):
         return strList[1].strip()
     return ""
 
-def isProductInList(targetName):
-    for obj in ObjList:
-        if (obj.productName == targetName):
-            return True
-    return False
+def findProductIndexInList(targetName):
+    for i in range(len(ObjList)):
+        if (ObjList[i].productName == targetName):
+            return i
+    return -1
 
 def printTopLevelCommands():
     print("Available commands:")
@@ -72,6 +73,8 @@ def processCommand(cmdStr, cmdFirstArg = ""):
         removeItem()
     elif (cmdFirstArg == "testemail"):
         testEmail()
+    elif (cmdFirstArg == "resetvalues"):
+        forceValuesToDefault()
     else:
         listAllLinks = (cmdFirstArg == "listalllinks")
         listEntries(listAllLinks)
@@ -104,7 +107,7 @@ def addItem(cmdStr):
     if (productName == ""):
         productName = input("Product name (without quotes)? ").strip()
 
-    if (isProductInList(productName)):
+    if (findProductIndexInList(productName) != -1):
         print("This product is already in the watch list!")
         return
 
@@ -188,8 +191,14 @@ def ingestFileList():
                 except:
                     print("Error adding line: " + line)
                     continue
-                print(prodName)
-                print(link)
+                objIndex = findProductIndexInList(prodName)
+                if (objIndex != -1): # If product is in list
+                    ObjList[objIndex].addRetailerLink(link)
+                else:
+                    newObj = ProductObj(prodName, [link])
+                    ObjList.append(newObj)
+
+        print("Finished ingesting " + fileName)
 
 def testEmail():
     sender, sender_password, receiver = getEmailCreds()
@@ -197,14 +206,26 @@ def testEmail():
 
     sendEmail(sender, sender_password, receiver, mailtext)
 
+# This command is intentionally hidden from listed commands for testing
+def forceValuesToDefault():
+    if (ObjList == []):
+        print("List is empty!")
+        return
+    else:
+        for obj in ObjList:
+            obj.resetValueToDefault()
+        print("Values have been reset!")
+
 ########################################################################
 ########################## Interface Functions #########################
 ########################################################################
+
+# run "python3 -c 'import scraper; scraper.processList()'"
 def processList():
     # Deserialize the buffer file because it is detached from interface
     if (isfile(BUFFER_FILE)):
         print("Loading existing list")
-        ObjList = deserializeList()
+        ObjList = deserializeList() # Run in isolation as command, it treats ObjList as local var
     else:
         print("Failed to process the objects because there is no buffer file")
         return
@@ -214,7 +235,7 @@ def processList():
         obj.updatePrices()
 
     # Grab all of the changed and send email if there has been a change
-    buildAndSendEmail()
+    buildAndSendEmail(ObjList)
     # Serialize the ObjList back to buffer file
     serializeList(ObjList)
 
@@ -243,4 +264,4 @@ if __name__ == "__main__":
         processCommand(argv)
 
     # add if has changed
-    #serializeList(ObjList)
+    serializeList(ObjList)
