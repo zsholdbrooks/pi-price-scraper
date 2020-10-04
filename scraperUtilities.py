@@ -152,10 +152,10 @@ def findBHPhotoPrice(url):
     price = getStringRegexResult(page, r"pricingPrice.*?\d*\.\d*")
     price = price[15:]
     # Extract coupon container with regex
-    couponStr = getStringRegexResult(page, "savingCouponContainer.*?</div", hardException=False)
+    couponStr = getStringRegexResult(page, r"savingCouponContainer.*?</div", hardException=False)
     if (couponStr != ""):
         # Extract coupon description from container and kick out the framing characters
-        regResult = getStringRegexResult(couponStr, "g>.*</d")
+        regResult = getStringRegexResult(couponStr, r"g>.*</d")
         if (regResult != ""):
             return price, [regResult[2:-3]]
     return float(price), []
