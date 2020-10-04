@@ -17,7 +17,7 @@ def buildAndSendEmail(ObjListLocal):
         newChangeStr = obj.getChangeString()
         if (newChangeStr == ""):
             continue
-        emailBody += obj.productName + ":\n"
+        emailBody += "<p><b>" + obj.productName + ":</b></p>\n"
         emailBody += newChangeStr + "\n"
         if (obj.errorLog != ""):
             errorBody += obj.errorLog
@@ -99,11 +99,9 @@ def addItem(cmdStr):
     productName = ""
     urlList = []
     cmdArgList = cmdStr.split(" ")[1:]
-    print(cmdArgList)
-    print(len(cmdArgList))
 
     if (len(cmdArgList) > 0):
-        productName = extractQuote(cmdStr)[1:-1].strip()
+        productName = extractQuote(cmdStr).strip()
     if (productName == ""):
         productName = input("Product name (without quotes)? ").strip()
 

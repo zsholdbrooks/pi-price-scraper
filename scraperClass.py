@@ -1,7 +1,7 @@
-from scraperUtilities import changeFileName, URL_PROCESSOR_MAPPER
+from scraperUtilities import changeFileName, getHTMLRetailerEntry, getHTMLRetailerPromo, URL_PROCESSOR_MAPPER
+from urllib import error
 from os.path import isfile
 import re
-import urllib
 
 
 EMAIL_FILE = "../emailCreds.txt"
@@ -77,24 +77,28 @@ class ProductObj:
             retailerEntryList = self.urlDict.get(retailer)
             if (retailerEntryList == None):
                 continue
-            
+
+            promoList = retailerEntryList[PROMO_LIST_IND]
             if (retailerEntryList[CHANGED_PRICE_IND] != -1):
                 #tempStr = "\t{}:\tThe price decreased from ${:.2f} to ${:.2f} at {}\n"
-                prevPrice = retailerEntryList[PREV_PRICE_IND]
-                newPrice = retailerEntryList[CHANGED_PRICE_IND]
+                prevPrice = "{:.2f}".format(retailerEntryList[PREV_PRICE_IND])
+                newPrice = "{:.2f}".format(retailerEntryList[CHANGED_PRICE_IND])
                 link = retailerEntryList[LINK_IND]
-                tempStr = "\t{}:\tThe price decreased from $".format(retailer.capitalize())
-                tempStr += "{:.2f} to ${:.2f} at {}\n".format(prevPrice, newPrice, link)
-                changeString += tempStr
-                
-                promoList = retailerEntryList[PROMO_LIST_IND]
-                if (promoList != []):
-                    tempStr += "\t\tPromos:\n"
-                    for promo in promoList:
-                        tempStr += "\t\t  " + promo + "\n"
-                    retailerEntryList[PROMO_LIST_IND] = []
+                #tempStr = "\t{}:\tThe price decreased from $".format(retailer.capitalize())
+                #tempStr += "{:.2f} to ${:.2f} at {}\n".format(prevPrice, newPrice, link)
+                changeString += getHTMLRetailerEntry(retailer, link, prevPrice, newPrice)
                 retailerEntryList[PREV_PRICE_IND] = retailerEntryList[CHANGED_PRICE_IND]
                 retailerEntryList[CHANGED_PRICE_IND] = -1
+
+                if (promoList != []):
+                    changeString += getHTMLRetailerPromo(promoList) 
+            elif (promoList != []):
+                changeString += getHTMLRetailerPromo(promoList, retailer, retailerEntryList[LINK_IND])
+
+                """changeString += "\t\tPromos:\n"
+                for promo in promoList:
+                    changeString += "\t\t  " + promo + "\n"
+                retailerEntryList[PROMO_LIST_IND] = []"""
         
         return changeString
 
@@ -123,7 +127,7 @@ class ProductObj:
 
         try:
             price, promoList = URL_PROCESSOR_MAPPER[retailer](url)
-        except urllib.error.HTTPError:
+        except error.HTTPError:
             print("\nThe " + retailer + " link is either invalid or unavailable!")
             print("This link was not added.")
             return

@@ -42,8 +42,8 @@ def getEmailCreds():
     return from_email.lower(), password, to_email.lower()
 
 def sendEmail(sender, sender_password, receiver, mailBody):
-    subject = "A Price Dropped On Your Watchlist!"
-    mailtext = "Subject:" + subject + "\n\n" + mailBody
+    mailtext = "Content-type: text/html\nSubject: A Price Dropped On Your Watchlist!\n\n"
+    mailtext += mailBody
 
     server = smtplib.SMTP(host='smtp.gmail.com', port=587)
     server.ehlo()
@@ -87,6 +87,24 @@ def bsClassFindPrice(page, classID):
 def dumpPageToLog(page):
     with open("errorDump.html", 'w') as file:
         file.write(page)
+
+def getHTMLRetailerEntry(retailer, link, prevPrice, newPrice):
+    linkHtml = '<a href="' + link + '">' + retailer.capitalize() + ':</a> '
+    priceMsg = 'Price drop from $' + prevPrice + " to $" + newPrice + "</p>\n"
+    htmlStr = "<p>&nbsp;&nbsp;&nbsp;" + linkHtml + priceMsg
+    return htmlStr
+
+def getHTMLRetailerPromo(promoList, retailer="", link=""):
+    htmlStr = "<p>"
+    if (retailer != ""):
+        htmlStr += '<a href="' + link + '">' + retailer.capitalize() \
+                 + ':</a></p>\n<p>'
+    else:
+        htmlStr += "&nbsp;&nbsp;&nbsp;Promos:</p>\n"
+        twoTabs = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+        for promo in promoList:
+            htmlStr += "<p>" + twoTabs + promo + "</p>\n"
+    return htmlStr
 
 ######################## Serialization Functions ########################
 
