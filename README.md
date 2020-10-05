@@ -4,6 +4,8 @@ This is a Python program designed to run regularly on a Raspberry Pi to scrape p
 ## _Theory of Operation_
 The program works by downloading a particular website's raw HTML and parsing it via the html tags or a regex with the intent of grabbing the current price and/or promotions. Both regexes and HTML tags were determined by manually looking through the raw HTML of different retailer entries. A list of products and each product's links are maintain via a buffer file that is used to store the price information and URLs. If the new prices for a particular link are lower than a given percent significance (by default a 3% discount), an email will be sent with the previous and new price along with the hyperlinked URL. The email will include the full list of price changes across the full product list as well as any potential errors encountered.
 
+*Note: The program was initially developed on Python 3.7.3*
+
 __General Flow:__
  - Load the buffer file
  - Download the html page, parse the page, and update each product
@@ -13,7 +15,7 @@ __General Flow:__
  - Obtain the email credentials in a file located in a separate directory
  - Send the email
 
-Note: The program checks if there was a change while building the email
+*Note: The program checks if there was a change while building the email*
 ***
 # Quick-ish Setup 
 _For Beginners: For a more complete explanation of setup and various Python concepts used, see Complete_Installation.md and Python_Concepts.md_
