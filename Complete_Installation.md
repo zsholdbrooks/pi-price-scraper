@@ -3,7 +3,11 @@
 1. Create a spare gmail if you do not already have one (not your main account!). This ensures that if the Pi is somehow compromised (very unlikely) that you will not be subject to losing your main email and potentially more.
 
    - _The code currently only supports a gmail sender (your spare email) but can probably be easily modified to support other providers._
-2. Set up the gmail extra settings
+2. Log into your spare gmail account and follow these steps:
+   - Go to "Manage your Google Account"
+   - Click on the `Security` Tab
+   - Scroll down to "Less secure app access" and click `Turn on access (not recommended)`
+   - Allowing "Less secure app access" is one of the primary reasons you should use a spare or junk email
 3. Amass a list of products and full https URLs/links to any of the supported retailers in a text file formatted in the way as shown below.
     - The "product" name does not have to match the actual product name, but having the same "product" name on multiple lines will allow you to associate that same product with different retailer links.
     - To create the file, you can just use notepad or a similar basic text editor. Save this file to something like `links.txt` or whatever you want. The formatting is more important than the file name.
@@ -90,12 +94,47 @@ To make sure the program runs regularly, we will use an already installed progra
 # Setting Up VSCode for Remote Development
 *__Caution: This set of instructions will generally be more for those who are interested more in actual independent development on the Raspberry Pi.__*
 
-Going this route will inevitably require regular usage of the command line, so many may be uncomfortable or unwilling to run down this path. I would honestly reccommend it for everyone, but I can see very many getting lost in the steps and this process not being worth some people's time given their singular use.
+*__Important Note: Microsoft apparently does not yet support the ARMv6 architecture in their SSH extension. Because of this, you cannot use this guide if you have a Raspberry Pi Zero W (and probably the Raspberry Pi 1).__*
+
+Going this route will inevitably require regular usage of the command line, so many may be uncomfortable or unwilling to run down this path. I would honestly recommend it for everyone, but I can see very many getting lost in the steps and this process not being worth some people's time given their singular use.
 
 As an aside, I love this workflow because it allows me to have my Raspberry Pi running with just a power and Wi-Fi connection while still being able to develop on either my laptop or desktop. This gives me the ease and speed of working on a Windows or Mac system (with one KB and mouse set) while being able to target the Raspberry Pi. VS Code also stands to me to be the best utility for development due to its near universal support of languages. While it may not have more targeted tools like VS Community and the likes of PyCharm, it is very good at being leveraged for a variety of tasks.
 
-### *__Will add in a bit__*
+## _Setup on the Pi_
 
+1. Install openssh-server on the Pi by running the command below
+   - `sudo apt-get install openssh-server`
+   - It's possible it is already installed.
+2. Run the following commands to enable the ssh server service and start it
+   - `sudo systemctl enable ssh`
+   - `sudo systemctl start ssh`
+3. Run the command below to obtain your Pi's IP address
+   - `hostname -I`
+4. To find out your user name, run the commmand below
+   - `whoami`
+5. After finding both your user name and your IP address, make sure to note or write down these two in the following format
+   - `ssh user@ipAddress`
+   - If you have a default setup, this pattern will likely be something like `ssh pi@192.168.*.*` where `*` is any positive number below 256
+
+Now that you have the ssh server enabled and started, it should remain on and even start back up after a reboot of the Pi.
+
+## _Setup on your Main Computer_
+This part essentially follows a simplified version of [Microsoft's guide](https://code.visualstudio.com/docs/remote/ssh-tutorial).
+1.  Download and install VS Code from [Microsoft's website](https://code.visualstudio.com/)
+2.  Open VS Code and install Microsoft's [Remote development extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh)
+       - You can click the link, click `Install`, and follow the prompts to open up the app page within VS Code
+3.  Once the extension is installed and VS Code restarts, click on the icon on the far left toolbar that looks like a computer monitor
+       - If you are having trouble locating the specific icon, hover over each one until you find the one that is the `Remote Explorer`
+4.  Once there, you will see a section to the right of the icon with the name `SSH Targets`. Hover over that section until you locate the `+`, settings gear, and refresh symbol right next to the `SSH TARGETS` title. Click on the `+` symbol to add a new ssh target.
+5.  Now VS Code will prompt you with a prompt box that has a command example with a very familiar format. Type in the `ssh user@ipAddress` command that you noted earlier in the Pi Setup and hit `Enter`.
+6.  When it asks for the `SSH configuration file to update`, just hit `Enter`
+7.  Click on the new IP entry in the SSH Targets tab and click the folder (maybe a terminal window?) looking icon. This launches a new window with a VS Code workspace that is inside the Raspberry Pi. This will be how you "log into the Pi" whenever you want to get on it to start doing development.
+8.  When you open the SSH Target, select `Linux`, select `Yes`, and enter in the password for your Raspberry Pi.
+9.  Once it is properly connected, click the `Terminal` tab at the top and select `New Terminal`. This will start up your terminal for your Pi. This terminal acts the exact same as if you were running commands on the terminal on the Pi directly.
+10. (Optional) You are now done with setup, but you can actually rename your Raspberry Pi target from the IP address to a proper name.
+    - To do this, click the settings gear icon by the `SSH TARGETS` heading to open the SSH configuration file.
+    - Click the first file (assuming that was the SSH config file you used during setup).
+    - Then change `Host` to be your desired name with no spaces like `RaspberryPi` or `Raspberry_Pi`.
 
 # Known issues
 - Running "scraper.py" causes an error in scraperClass.py with a return statement that has an `f` before the string.
