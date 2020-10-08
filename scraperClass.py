@@ -12,7 +12,8 @@ EMAIL_RECEIVER = ""
 LINK_IND = 0
 PREV_PRICE_IND = 1
 CHANGED_PRICE_IND = 2
-PROMO_LIST_IND = 3
+PREV_PROMO_LIST_IND = 3
+NEW_PROMO_LIST_IND = 4
 
 VALID_RETAILERS = ("amazon", "bestbuy", "bhphoto", "guitarcenter", "musiciansfriend", "newegg", "sweetwater", "walmart")
 
@@ -53,7 +54,8 @@ class ProductObj:
             try:
                 resultList = URL_PROCESSOR_MAPPER[retailer](link)
                 newPrice = resultList[0]
-                self.urlDict[retailer][PROMO_LIST_IND] = resultList[1]
+                # Store the just parsed promo in the new promo slot to later compare to prevPromo
+                self.urlDict[retailer][NEW_PROMO_LIST_IND] = resultList[1]
             except Exception as e:
                 prodNameUnderScored = self.productName.replace(" ", "_")
                 fileName = retailer + "-" + prodNameUnderScored + "-" + "errorDump.html"
@@ -78,7 +80,11 @@ class ProductObj:
             if (retailerEntryList == None):
                 continue
 
-            promoList = retailerEntryList[PROMO_LIST_IND]
+            prevPromoList = retailerEntryList[PREV_PROMO_LIST_IND]
+            newPromoList = retailerEntryList[NEW_PROMO_LIST_IND]
+            # If the promos differ, update the previous list to be the new one
+            if (newPromoList != prevPromoList):
+                self.urlDict[retailer][PREV_PRICE_IND] = newPromoList
             if (retailerEntryList[CHANGED_PRICE_IND] != -1):
                 #tempStr = "\t{}:\tThe price decreased from ${:.2f} to ${:.2f} at {}\n"
                 prevPrice = "{:.2f}".format(retailerEntryList[PREV_PRICE_IND])
@@ -90,15 +96,11 @@ class ProductObj:
                 retailerEntryList[PREV_PRICE_IND] = retailerEntryList[CHANGED_PRICE_IND]
                 retailerEntryList[CHANGED_PRICE_IND] = -1
 
-                if (promoList != []):
-                    changeString += getHTMLRetailerPromo(promoList) 
-            elif (promoList != []):
-                changeString += getHTMLRetailerPromo(promoList, retailer, retailerEntryList[LINK_IND])
-
-                """changeString += "\t\tPromos:\n"
-                for promo in promoList:
-                    changeString += "\t\t  " + promo + "\n"
-                retailerEntryList[PROMO_LIST_IND] = []"""
+                # If there was not a promo already and if the new promolist isn't empty
+                if (newPromoList != []):
+                    changeString += getHTMLRetailerPromo(newPromoList) 
+            elif (newPromoList != []):
+                changeString += getHTMLRetailerPromo(newPromoList, retailer, retailerEntryList[LINK_IND])
         
         return changeString
 
@@ -136,7 +138,7 @@ class ProductObj:
             print("This link was not added.")
             print(e)
             return
-        retailerEntryList = {retailer : [url, price, -1, promoList]}
+        retailerEntryList = {retailer : [url, price, -1, promoList, promoList]}
         self.urlDict.update(retailerEntryList)
 
     def removeRetailer(self, retailer):
@@ -158,4 +160,5 @@ class ProductObj:
             if (retailerEntryList == None):
                 continue
             self.urlDict[retailer][PREV_PRICE_IND] = 100000.0
-            self.urlDict[retailer][PROMO_LIST_IND] = []
+            self.urlDict[retailer][PREV_PROMO_LIST_IND] = []
+            self.urlDict[retailer][NEW_PROMO_LIST_IND] = []
