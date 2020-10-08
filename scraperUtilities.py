@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from datetime import date
 import requests
 import smtplib
 import urllib
@@ -52,8 +53,11 @@ def getEmailCreds():
     ################# End Function #################
 
 def sendEmail(sender, sender_password, receiver, mailBody):
+    # Get and format date for subject header
+    formattedDate = date.today().strftime("%B %d, %Y")
     # Signal HTML syntax and set the Subject
-    mailtext = "Content-type: text/html\nSubject: A Price Dropped On Your Watchlist!\n\n"
+    mailtext = "Content-type: text/html\nSubject: A Price Dropped On Your Watchlist! (" + \
+               + formattedDate + ")\n\n"
     mailtext += mailBody
 
     # Set up email signals
