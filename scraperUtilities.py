@@ -56,7 +56,7 @@ def sendEmail(sender, sender_password, receiver, mailBody):
     # Get and format date for subject header
     formattedDate = date.today().strftime("%B %d, %Y")
     # Signal HTML syntax and set the Subject
-    mailtext = "Content-type: text/html\nSubject: A Price Dropped On Your Watchlist! (" + \
+    mailtext = "Content-type: text/html\nSubject: A Price Dropped On Your Watchlist! (" \
                + formattedDate + ")\n\n"
     mailtext += mailBody
 
