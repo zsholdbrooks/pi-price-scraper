@@ -235,10 +235,13 @@ def findMusiciansFriendPrice(url):
     page = getHTMLText(url)
     parsedPage = BeautifulSoup(page, 'html.parser')
     skuDetails = parsedPage.find(id="skuDetail")
-    if (skuDetails == None):
-        raise Exception("Failed to find MF SKU details")
-    searchResult = getStringRegexResult(skuDetails.get_text(), r"salePrice=\d*.\d*")
-    return float(searchResult[10:]), []
+    if (skuDetails != None):
+        searchResult = getStringRegexResult(skuDetails.get_text(), r"salePrice=\d*.\d*")
+        return float(searchResult[10:]), []
+    
+    productDetails = getStringRegexResult(page, r"siteVars hidden.*\n.*")
+    priceStr = getStringRegexResult(productDetails, r"\d+\.\d+")
+    return float(priceStr), []
     ################# End Function #################
 
 def findSweetwaterPrice(url):
@@ -247,6 +250,7 @@ def findSweetwaterPrice(url):
     # Extract the price
     priceProp = parsedPage.find(property="product:price:amount")
     if (priceProp == None):
+        dumpPageToLog(page)
         raise Exception("Price property not found for Sweetwater")
     price = getStringRegexResult(str(priceProp), r"\d+\.\d+")
     

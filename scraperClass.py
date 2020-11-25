@@ -63,10 +63,9 @@ class ProductObj:
             # Attempt to successfully obtain the new price and promo list
             try:
                 # Run the download and parsing function for the current retailer
-                resultList = URL_PROCESSOR_MAPPER[retailer](link)
-                newPrice = resultList[0]
+                newPrice, promoList = URL_PROCESSOR_MAPPER[retailer](link)
                 # Store the just parsed promo in the new promo slot to later compare to prevPromo
-                self.urlDict[retailer][NEW_PROMO_LIST_IND] = resultList[1]
+                self.urlDict[retailer][NEW_PROMO_LIST_IND] = promoList
             # Note the error and dump the HTML or source string to file
             except Exception as e:
                 prodNameUnderScored = self.productName.replace(" ", "_")
