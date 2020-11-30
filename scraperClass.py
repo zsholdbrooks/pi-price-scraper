@@ -11,10 +11,14 @@ PREV_PRICE_IND = 1                        ###
 CHANGED_PRICE_IND = 2                     ###
 PREV_PROMO_LIST_IND = 3                   ###
 NEW_PROMO_LIST_IND = 4                    ###
+LINK_ERROR_COUNT_IND = 5                  ###
 #############################################
 
 ### Comparison tuple for validating retailer during retailer addition ###
 VALID_RETAILERS = ("amazon", "bestbuy", "bhphoto", "guitarcenter", "musiciansfriend", "newegg", "sweetwater", "walmart")
+
+# How many times consecutive error messages for a link will occur before it is skipped
+CONSECUTIVE_ERROR_THRESHOLD = 2  # So you don't get repeatedly spammed by errors...
 
 
 class ProductObj:
@@ -67,22 +71,58 @@ class ProductObj:
                 # Store the just parsed promo in the new promo slot to later compare to prevPromo
                 self.urlDict[retailer][NEW_PROMO_LIST_IND] = promoList
             except error.HTTPError as e:
-                self.errorLog += "The " + retailer + " link for " + self.productName \
+                # Increment consecutive error count
+                self.urlDict[retailer][LINK_ERROR_COUNT_IND] += 1
+                errorCount = self.urlDict[retailer][LINK_ERROR_COUNT_IND]
+
+                # Skip error logging if over spam count
+                if (errorCount > CONSECUTIVE_ERROR_THRESHOLD):
+                    continue
+                
+                # Add error message to log
+                self.errorLog += "<p>&nbsp;&nbsp;&nbsp;&nbsp;The " + retailer + " link for " + self.productName \
                               + " failed to download or encountered another HTTP related error.\n"
-                self.errorLog += str(e) + "\n"
+                self.errorLog += str(e) + "</p>"
                 continue
             # Note the error and dump the HTML or source string to file
             except Exception as e:
+                # Increment consecutive error count
+                self.urlDict[retailer][LINK_ERROR_COUNT_IND] += 1
+                errorCount = self.urlDict[retailer][LINK_ERROR_COUNT_IND]
+
                 prodNameUnderScored = self.productName.replace(" ", "_")
                 # Append the product name and retailer to default "errorDump.html" error file
                 fileName = retailer + "-" + prodNameUnderScored + "-" + "errorDump.html"
                 changeFileName("errorDump.html", fileName)
+
+                # Skip error logging if over spam count
+                if (errorCount > CONSECUTIVE_ERROR_THRESHOLD):
+                    continue
                 # Add to error log
-                self.errorLog += str(e) + "\n"
+                self.errorLog += "<p>&nbsp;&nbsp;&nbsp;&nbsp;" + str(e) + "</p>"
                 continue
 
             # Compare new price to old price
             prevPrice = self.urlDict[retailer][PREV_PRICE_IND]
+
+            # Account for division by 0 by not allowing prevPrice to become 0
+            # Count a new price being 0 as an error
+            if (newPrice == 0):
+                # Increment consecutive error count
+                self.urlDict[retailer][LINK_ERROR_COUNT_IND] += 1
+                errorCount = self.urlDict[retailer][LINK_ERROR_COUNT_IND]
+
+                # Skip error logging if over spam count
+                if (errorCount > CONSECUTIVE_ERROR_THRESHOLD):
+                    continue
+
+                self.errorLog += "<p>&nbsp;&nbsp;&nbsp;&nbsp;The price of " + self.productName \
+                              + " at " + retailer + " is $0. It may be out of stock or removed from the retailer.</p>"
+                continue
+
+            # If there is no error, reinitialize error count to 0
+            self.urlDict[retailer][LINK_ERROR_COUNT_IND] = 0
+
             percentDiff = (prevPrice - newPrice) / prevPrice
             # Update new price entry if drop is greater than significant change (default of 3%)
             if (percentDiff > self.significantPercentChange):
@@ -167,7 +207,7 @@ class ProductObj:
             print(e)
             return
         # Load new entry with obtained data and default data
-        retailerEntryList = {retailer : [url, price, -1, promoList, promoList]}
+        retailerEntryList = {retailer : [url, price, -1, promoList, promoList, 0]}
         self.urlDict.update(retailerEntryList)
     ################# End Function #################
 

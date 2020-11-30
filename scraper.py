@@ -41,7 +41,7 @@ def buildAndSendEmail():
 
     # Add errors to end of email if any exist
     if (errorBody != ""):
-        emailBody += "\nErrors:\n" + errorBody
+        emailBody += "<p>Errors:</p>" + errorBody
     
     # Skip sending email if there are neither errors or updates
     if (emailBody == ""):
