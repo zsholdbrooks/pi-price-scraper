@@ -66,6 +66,11 @@ class ProductObj:
                 newPrice, promoList = URL_PROCESSOR_MAPPER[retailer](link)
                 # Store the just parsed promo in the new promo slot to later compare to prevPromo
                 self.urlDict[retailer][NEW_PROMO_LIST_IND] = promoList
+            except error.HTTPError as e:
+                self.errorLog += "The " + retailer + " link for " + self.productName \
+                              + " failed to download or encountered another HTTP related error.\n"
+                self.errorLog += str(e) + "\n"
+                continue
             # Note the error and dump the HTML or source string to file
             except Exception as e:
                 prodNameUnderScored = self.productName.replace(" ", "_")
